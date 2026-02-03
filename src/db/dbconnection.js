@@ -8,7 +8,7 @@ const URI =  `mongodb://127.0.0.1:27017/${DB_NAME}`
 
 const dbconnection = async () => {
     try {
-        mongoose.connect(URI)
+       await mongoose.connect(URI)
         console.log(`Mongodb connected successfully ${DB_NAME}`);
         
     } catch (error) {

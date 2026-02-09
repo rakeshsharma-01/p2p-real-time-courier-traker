@@ -266,10 +266,98 @@ try {
 }
 })
 
+
+const changePassword = AsyncHandler( async (req,res) =>{
+
+    const {oldPassword, newPassword} = req.body
+
+    const user =  await User.findById(req.user?._id)
+
+    const ispasswordCorrect =  user.isPasswordCorrect(oldPassword)
+
+    if(!ispasswordCorrect){
+
+        throw new ApiError(401, "invalid password")
+    }
+
+    user.password = newPassword
+    user.save({validateBeforeSave: false})
+
+    res.status(200)
+    .json(new ApiResponse(200, {}, "password changed successfully"))
+})
+
+const getCurrentUser = AsyncHandler( async(req,res) => {
+    return res.status(200)
+    .json(
+        new ApiResponse(200, req.user, "current user fetched successfully")
+    )
+})
+
+const updateAccountDetail = AsyncHandler( async(req,res) =>{
+      const {username, email} = req.body
+
+      if (!(username && email)) {
+        throw new ApiError (400, "please fill user detailed")
+      }
+
+     const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                username: username,
+                email: email
+            }
+        },
+        {
+            new: true
+        }
+      ).select("-password")
+
+      return res.status(200)
+      .json(
+        new ApiResponse(200, user, "Account detail update successfully")
+      )
+})
+
+const updateProfileImage = AsyncHandler( async(req,res) =>{
+      
+      
+         const profileImageLocalPath =   req.file?.path
+
+         if (!profileImageLocalPath) {
+            throw new ApiError(400, "profileImage file is missing")
+         }
+
+        const profileImage =  await uploadOnCloudinary(profileImageLocalPath)
+
+        if (!profileImage) {
+            throw new ApiError(401, "Error while uploding profileImage on cloudinary")
+        }
+
+       const user = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $set: {
+                    profileImage: profileImage.url
+                }
+            },{new: true}
+        ).select("-password")
+
+        return res.status(200)
+        .json(
+            new ApiResponse(200, user, "profileImage updated successfully")
+        )
+})
+
 export {
 
     registerUser,
     logiUser,
     logOutUser,
-    refreshAccessToken
+    refreshAccessToken,
+    changePassword,
+    getCurrentUser,
+    updateAccountDetail,
+    updateProfileImage
          }
